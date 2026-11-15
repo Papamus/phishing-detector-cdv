@@ -54,7 +54,7 @@ Dla jednego HTML/TXT można użyć `--file ścieżka\do\pliku.html`. Zmiana ekst
 | `phishing_detector_predict.py` | Wczytuje artefakt, sprawdza jego wersję i wykonuje predykcje/ewaluację. | `models/phishing_detector_option_a.joblib`, moduł cech |
 | `phishing_detector_requirements.txt` | Pakiety potrzebne do treningu, wykresów i notebooka. | Instalowane do `.venv` przez pip |
 | `phishing_detector_data_sample_test.json` | Dołączona mała próbka testowa w formacie rekordów `text`/`label`. | Opcja `--input` predyktora |
-| `README_LOCAL.md` | Skrócona instrukcja projektu. | Uzupełnia niniejszy dokument |
+| `README.md` | Skrócona instrukcja projektu wyświetlana domyślnie na stronie repozytorium. | Uzupełnia niniejszy dokument |
 | `LICENSE` | Warunki licencyjne repozytorium. | — |
 | `data/combined_reduced.json` | Lokalny cache oryginalnego datasetu, około 521 MB. | Wczytywany przez skrypt treningowy |
 | `models/phishing_detector_option_a.joblib` | Gotowy, wersjonowany i skompresowany pipeline z progiem oraz metadanymi źródła, sumy SHA-256 i splitu. Jest śledzony w repozytorium, dzięki czemu predykcja działa bez treningu. | Odczytywany przez predyktor |
