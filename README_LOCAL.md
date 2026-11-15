@@ -11,7 +11,7 @@ py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe train_and_evaluate.py
 ```
 
-Trening zapisuje model w `models/phishing_detector_option_a.joblib`, metryki w `results/metrics.json`, wykres w `results/test_results.png`. `data/combined_reduced.json` jest cache'em niezmienionych danych notebooka (około 500 MB); pierwszy pobór wymaga internetu, kolejne uruchomienia działają offline. Notebook wywołuje ten sam skrypt, więc nie ma osobnej implementacji treningu.
+Repozytorium zawiera gotowy model w `models/phishing_detector_option_a.joblib`, więc predykcja nie wymaga pobierania danych ani treningu. Trening odtwarza model i zapisuje metryki w `results/metrics.json` oraz wykres w `results/test_results.png`. `data/combined_reduced.json` jest cache'em niezmienionych danych notebooka (około 500 MB); pierwszy trening pobiera go z internetu. Notebook wywołuje ten sam skrypt, więc nie ma osobnej implementacji treningu.
 
 Predykcja na przykładowych danych:
 

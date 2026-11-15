@@ -28,6 +28,8 @@ Pierwsze uruchomienie pobierze około 521 MB danych i wymaga internetu. Następn
 
 Uruchom notebook z tego samego katalogu projektu, wybierz kernel `.venv`, a następnie wykonaj komórki po kolei. Notebook uruchamia ten sam skrypt treningowy, a potem pokazuje zapisane metryki i wykres.
 
+Repo zawiera gotowy artefakt modelu, więc można pominąć trening i od razu wykonać predykcję. Predykcja nie wymaga dostępu do datasetu ani internetu. Trening jest potrzebny tylko do odtworzenia metryk lub ponownego wytrenowania modelu.
+
 Predykcja na pojedynczym tekście:
 
 ```powershell
@@ -55,7 +57,7 @@ Dla jednego HTML/TXT można użyć `--file ścieżka\do\pliku.html`. Zmiana ekst
 | `README_LOCAL.md` | Skrócona instrukcja projektu. | Uzupełnia niniejszy dokument |
 | `LICENSE` | Warunki licencyjne repozytorium. | — |
 | `data/combined_reduced.json` | Lokalny cache oryginalnego datasetu, około 521 MB. | Wczytywany przez skrypt treningowy |
-| `models/phishing_detector_option_a.joblib` | Skompresowany pipeline i próg oraz metadane wersji, źródła, sumy SHA-256 i splitu. | Odczytywany przez predyktor |
+| `models/phishing_detector_option_a.joblib` | Gotowy, wersjonowany i skompresowany pipeline z progiem oraz metadanymi źródła, sumy SHA-256 i splitu. Jest śledzony w repozytorium, dzięki czemu predykcja działa bez treningu. | Odczytywany przez predyktor |
 | `results/metrics.json` | Metryki ostatniego pełnego testu oraz porównanie z baseline. | Czytany przez notebook |
 | `results/metrics_baseline.json` | Zachowane metryki modelu bazowego. | Skrypt używa ich na wykresie porównawczym |
 | `results/test_results.png` | Macierz pomyłek i porównanie Recall/Precision/F1. | Wyświetlany w notebooku |
