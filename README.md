@@ -5,7 +5,7 @@ Model działa lokalnie na CPU i nie korzysta z API modeli. Dane są pobierane z 
 ## Instalacja i uruchomienie (Windows / PowerShell)
 
 ```powershell
-py -3.13 -m venv .venv
+py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r phishing_detector_requirements.txt
 .\.venv\Scripts\python.exe train_and_evaluate.py

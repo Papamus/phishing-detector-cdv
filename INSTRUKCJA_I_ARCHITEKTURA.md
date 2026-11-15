@@ -13,10 +13,12 @@ Podział danych jest stratyfikowany i deterministyczny (`seed=42`): 80% trening,
 Uruchom PowerShell w katalogu projektu:
 
 ```powershell
-py -3.13 -m venv .venv
+py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r phishing_detector_requirements.txt
 ```
+
+`py -3` wybiera najnowszą zainstalowaną wersję Pythona 3. Dostępne wersje sprawdzisz poleceniem `py --list`; jeśli go nie ma lub zwraca błąd, zainstaluj Python 3 z [python.org](https://www.python.org/downloads/). Pierwszy trening pobiera około 521 MB danych. Aby sprawdzić gotowy model bez pobierania danych treningowych, użyj polecenia predykcji poniżej.
 
 Wytrenuj i oceń model:
 
