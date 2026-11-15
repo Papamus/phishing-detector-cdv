@@ -164,7 +164,7 @@ def main():
     parser.add_argument(
         "--eval-test",
         action="store_true",
-        help="Ewaluacja na 20% zbiorze testowym z combined_reduced.json (random_state=42)",
+        help="Ewaluacja na 20%% zbiorze testowym z combined_reduced.json (random_state=42)",
     )
     parser.add_argument(
         "--data-path",
