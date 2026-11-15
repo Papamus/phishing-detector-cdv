@@ -47,11 +47,11 @@ def main():
     seconds = time.perf_counter() - start
     pred = (prob >= threshold).astype(int)
     result = {"samples": len(y_test), "threshold": threshold, "recall_phishing": float(recall_score(y_test,pred)), "precision_phishing": float(precision_score(y_test,pred)), "f1_phishing": float(f1_score(y_test,pred)), "inference_seconds": seconds, "ms_per_sample": seconds/len(y_test)*1000, "samples_per_second": len(y_test)/seconds, "model_bytes": MODEL.stat().st_size}
+    OUT.mkdir(parents=True, exist_ok=True)
     baseline_path = OUT / "metrics_baseline.json"
     if not baseline_path.exists():
         baseline_path.write_text(json.dumps({"threshold": .5, "recall_phishing": .912245833970341, "precision_phishing": .9512195121951219, "f1_phishing": .931325113157484, "inference_seconds": 8.24837899999693, "ms_per_sample": .5309203784756005, "samples_per_second": 1883.5215986081364, "model_bytes": 247170}, indent=2), encoding="utf-8")
     result["baseline"] = json.loads(baseline_path.read_text(encoding="utf-8"))
-    OUT.mkdir(exist_ok=True)
     (OUT/"metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     fig, axes = plt.subplots(1,2,figsize=(11,4))
     ConfusionMatrixDisplay.from_predictions(y_test,pred,display_labels=["Benign","Phishing"],ax=axes[0],colorbar=False)
