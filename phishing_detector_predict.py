@@ -15,12 +15,12 @@ from typing import Any, Dict, List, Optional
 
 import joblib
 import numpy as np
-import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix, f1_score, precision_score, recall_score
-from sklearn.model_selection import train_test_split
 
 # Wymagane do deserializacji potoku scikit-learn zapisanego w phishing_detector.ipynb
-import phishing_features  # noqa: F401
+import phishing_detector_phishing_features  # noqa: F401
+
+ARTIFACT_VERSION = 2
 
 DATASET_URL = (
     "https://huggingface.co/datasets/ealvaradob/phishing-dataset/resolve/main/combined_reduced.json"
@@ -42,6 +42,11 @@ class LocalPhishingDetector:
             )
         self.model_path = model_path
         artifact = joblib.load(model_path)
+        if artifact.get("artifact_version") != ARTIFACT_VERSION:
+            raise ValueError(
+                "Nieaktualna lub niezgodna wersja modelu. "
+                "Uruchom train_and_evaluate.py, aby wytrenować artefakt zgodny z bieżącymi cechami."
+            )
         self.pipeline = artifact["pipeline"]
         self.threshold = float(threshold) if threshold is not None else float(artifact["threshold"])
         self.dataset_source = artifact.get("dataset_source", "unknown")
@@ -82,7 +87,7 @@ def evaluate_samples(
 
     model_kb = detector.model_path.stat().st_size / 1024.0
     scripts_kb = sum(
-        Path(p).stat().st_size for p in ["phishing_features.py", "predict.py"] if Path(p).exists()
+        Path(p).stat().st_size for p in ["phishing_detector_phishing_features.py", "phishing_detector_predict.py"] if Path(p).exists()
     ) / 1024.0
 
     summary: Dict[str, Any] = {
@@ -195,12 +200,13 @@ def main():
             urllib.request.urlretrieve(DATASET_URL, args.data_path)
         with open(args.data_path, "r", encoding="utf-8") as f:
             raw = json.load(f)
-        df = pd.DataFrame({"text": [x["text"] for x in raw], "label": [int(x["label"]) for x in raw]})
-        _, test_df = train_test_split(df, test_size=0.2, random_state=42)
+        from sklearn.model_selection import train_test_split
+        test_indices = train_test_split(np.arange(len(raw)), test_size=0.2, random_state=42, stratify=[int(x["label"]) for x in raw])[1]
+        test_rows = [raw[i] for i in test_indices]
         evaluate_samples(
             detector,
-            test_df["text"].tolist(),
-            labels=test_df["label"].tolist(),
+            [x["text"] for x in test_rows],
+            labels=[int(x["label"]) for x in test_rows],
             output_path=args.output,
         )
         return

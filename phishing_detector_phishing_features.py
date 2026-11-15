@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 import re
+from urllib.parse import urlsplit
 from collections import Counter
 from typing import Iterable, List
 
@@ -18,7 +19,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import FunctionTransformer, MaxAbsScaler
 
-# Przycięcie tekstu wejściowego do 4096 znaków gwarantuje czas O(1) dla dużych stron HTML (>100 KB)
+# Ogranicza koszt dalszej ekstrakcji do maksymalnie 4096 znaków na próbkę.
 MAX_TEXT_LEN_FAST = 4_096
 
 _IPV4_RE = re.compile(r"(?:https?://)?(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:/|$)")
@@ -33,10 +34,11 @@ _URGENCY_RE = re.compile(
     re.IGNORECASE,
 )
 _HTML_TAG_RE = re.compile(r"(?:<!doctype|<html|<head|<body|<form|<script)", re.IGNORECASE)
+_DOMAIN_TERMS = ("login", "verify", "secure", "account", "update", "wallet", "signin", "password", "bank")
 
 
 def fast_truncate(texts: Iterable[str], max_len: int = MAX_TEXT_LEN_FAST) -> List[str]:
-    """Przycina ciąg wejściowy do ustalonego prefiksu w czasie O(1)."""
+    """Przycina tekst do ustalonego prefiksu; dalszy koszt ogranicza max_len."""
     return [t[:max_len] if isinstance(t, str) else "" for t in texts]
 
 
@@ -51,7 +53,7 @@ def _shannon_entropy_fast(sample: str) -> float:
 
 class FastLexicalExtractor(BaseEstimator, TransformerMixin):
     """
-    Ultraszybki ekstraktor 14 cech leksykalnych i strukturalnych (float32).
+    Lekki ekstraktor 20 cech leksykalnych i strukturalnych (float32).
     Operuje wyłącznie na krótkich prefiksach ciągu wejściowego (URL / HTML / SMS).
     """
 
@@ -70,6 +72,12 @@ class FastLexicalExtractor(BaseEstimator, TransformerMixin):
         "has_password_input",
         "has_js_obfuscation",
         "urgency_keyword_hits",
+        "host_length",
+        "host_digit_ratio",
+        "subdomain_count",
+        "suspicious_domain_term",
+        "suspicious_path_term",
+        "hyphen_count_host",
     ]
 
     def __init__(self, max_len: int = MAX_TEXT_LEN_FAST):
@@ -84,7 +92,7 @@ class FastLexicalExtractor(BaseEstimator, TransformerMixin):
             s = raw[: self.max_len] if isinstance(raw, str) else ""
             n = len(s)
             if n == 0:
-                rows.append([0.0] * 14)
+                rows.append([0.0] * len(self.FEATURE_NAMES))
                 continue
 
             head_120 = s[:120]
@@ -119,6 +127,21 @@ class FastLexicalExtractor(BaseEstimator, TransformerMixin):
             has_js_obf = float(bool(_JS_OBF_RE.search(lower_s)))
             urgency_hits = float(min(len(_URGENCY_RE.findall(s[:1500])), 12))
 
+            candidate = stripped.split()[0].strip("<>()[]{}\"'.,;") if stripped.split() else ""
+            if candidate.lower().startswith("www."):
+                candidate = "http://" + candidate
+            try:
+                parsed = urlsplit(candidate if "://" in candidate else "//" + candidate)
+                host = (parsed.hostname or "").lower().rstrip(".")[:253]
+                path_query = (parsed.path + "?" + parsed.query).lower()[:512]
+            except ValueError:  # malformed bracketed/IPv6-like input
+                host, path_query = "", ""
+            labels = [part for part in host.split(".") if part]
+            host_digits = sum(ch.isdigit() for ch in host)
+            host_length = min(len(host), 253)
+            domain_term = float(any(term in host for term in _DOMAIN_TERMS))
+            path_term = float(any(term in path_query for term in _DOMAIN_TERMS))
+
             rows.append(
                 [
                     log_len,
@@ -135,6 +158,12 @@ class FastLexicalExtractor(BaseEstimator, TransformerMixin):
                     has_pwd,
                     has_js_obf,
                     urgency_hits,
+                    math.log1p(host_length),
+                    host_digits / max(host_length, 1),
+                    float(min(max(len(labels) - 2, 0), 10)),
+                    domain_term,
+                    path_term,
+                    float(min(host.count("-"), 10)),
                 ]
             )
 
@@ -150,7 +179,7 @@ def build_option_a_pipeline(
     """
     Buduje bezstanowy, ultralekki potok Opcji A (Ultra-Fast & Ultra-Compact):
     1. Przycięcie wejścia do 4096 znaków (fast_truncate).
-    2. Równoległa wektoryzacja haszująca (słowna 1-2 + znakowa char_wb 3-4) + 14 cech strukturalnych.
+    2. Równoległa wektoryzacja haszująca (słowna 1-2 + znakowa char_wb 3-4) + 20 cech strukturalnych.
     3. Liniowy klasyfikator logistyczny SGDClassifier(loss='log_loss').
     """
     features = FeatureUnion(
