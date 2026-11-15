@@ -44,6 +44,14 @@ Predykcja/ewaluacja na pliku JSON:
 .\.venv\Scripts\python.exe phishing_detector_predict.py --model models/phishing_detector_option_a.joblib --input phishing_detector_data_sample_test.json --output results/sample_predictions.json
 ```
 
+Ewaluacja gotowego modelu na pełnym, odłożonym zbiorze testowym (20% całego datasetu):
+
+```powershell
+.\.venv\Scripts\python.exe phishing_detector_predict.py --model models/phishing_detector_option_a.joblib --eval-test --output results/full_test_predictions.json
+```
+
+Jeśli `data/combined_reduced.json` nie istnieje, skrypt najpierw pobiera dataset (około 521 MB), więc wymaga dostępu do internetu. Wyniki zbiorcze — w tym recall, precision, F1 i macierz pomyłek — są wyświetlane w terminalu, a szczegółowe predykcje zapisywane do `results/full_test_predictions.json`. Ta komenda ocenia dołączony, wcześniej wytrenowany model; nie trenuje go ponownie. Do trenowania i ewaluacji nowego modelu uruchom `train_and_evaluate.py`.
+
 Dla jednego HTML/TXT można użyć `--file ścieżka\do\pliku.html`. Zmiana ekstraktora wymaga ponownego treningu; predyktor sprawdza wersję artefaktu i odrzuca niezgodny model.
 
 ## Pliki i powiązania
